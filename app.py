@@ -32,6 +32,7 @@ FlaskInstrumentor().instrument_app(app)
 # Getting tracer
 tracer = trace.get_tracer(__name__)
 
+# tracer.start_as_current_span: used to start a span and set it as the current span in the context.
 
 # Utility Functions
 def load_courses():
@@ -95,6 +96,7 @@ def save_course():
                 'instructor': instructor
             }
             save_courses(new_course)
+            # span.attribute: used to set attributes to the span.
             span.set_attribute("course_name", name)
             span.set_attribute("course_code", code)
             flash("Course added successfully!", "success")
