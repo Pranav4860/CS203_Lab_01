@@ -1,5 +1,6 @@
 import json
 import os
+import logging
 from flask import Flask, render_template, request, redirect, url_for, flash
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
@@ -11,6 +12,11 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 app = Flask(__name__)
 app.secret_key = 'secret'
 COURSE_FILE = 'course_catalog.json'
+n=None
+c=None
+
+# Logging
+logging.basicConfig(level=logging.INFO , format="%(asctime)s [%(levelname)s] %(message)s" , handlers=[logging.StreamHandler()])
 
 #Initialising OpenTelemetry Tracing
 trace.set_tracer_provider(
@@ -97,11 +103,17 @@ def save_course():
             }
             save_courses(new_course)
             # span.attribute: used to set attributes to the span.
+            if name==None or code==None:
+                logging.error(f"Failed to add course: {e}")
+            else:
+                n=name
+                c=code
             span.set_attribute("course_name", name)
             span.set_attribute("course_code", code)
             flash("Course added successfully!", "success")
         except Exception as e:
             span.set_attribute("error", True)
+            logging.error(f"Failed to add course: {e}")
             flash("Failed to add course.", "error")
         return redirect(url_for('course_catalog'))
 
@@ -121,9 +133,12 @@ def delete_course(code):
 @app.route('/add_course')
 def add_course():
     with tracer.start_as_current_span("add_course_page"):
+        if n==None or c==None:
+            # span.set_attribute("error", True)
+            logging.error("Failed to add course")
+            return render_template('add_course.html')
         return render_template('add_course.html')
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
